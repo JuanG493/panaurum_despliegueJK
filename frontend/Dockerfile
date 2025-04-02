@@ -14,7 +14,8 @@ RUN apk add --no-cache \
     libpng \
     libpng-dev \
     nasm \
-    python3
+    python3 \
+    nginx  # Add nginx to serve the built files
 
 # Clone repository using HTTPS with token
 ARG GITHUB_TOKEN
@@ -33,9 +34,12 @@ RUN echo "VITE_API_URL=${API_URL}" > .env
 # Install and build
 RUN npm install --force && npm run build
 
-# Expose port
-EXPOSE 5173
+# Configure nginx to serve the application
+RUN mkdir -p /var/log/nginx
+COPY frontend/nginx-container.conf /etc/nginx/nginx.conf
 
-# Start server - use the appropriate command for your frontend framework
-# For Vite-based projects:
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# Expose port
+EXPOSE 80
+
+# Start nginx to serve the built files
+CMD ["nginx", "-g", "daemon off;"]

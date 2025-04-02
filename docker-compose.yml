@@ -1,3 +1,5 @@
+version: '3'
+
 services:
   backend:
     build:
@@ -10,34 +12,36 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      APP_URL: "https://panaurum.informatica.iesmontenaranco.com:8000"
+      APP_URL: "https://panaurum.informatica.iesmontenaranco.com"
     depends_on:
       - database
     networks:
       - app_network
-    ports:
-      - "8000:80"
+      - nginx_network  # Add this network to connect with host nginx
+    expose:
+      - "8000"  # Just expose, don't publish to host
 
   frontend:
-      build:
-        context: .
-        dockerfile: frontend/Dockerfile
-        args:
-          GITHUB_TOKEN: ${GITHUB_TOKEN}
-          FRONTEND_REPO_URL: ${FRONTEND_REPO_URL}
-          API_URL: "http://${DOMAIN_NAME}:8000"
-      container_name: ${FRONTEND_CONTAINER_NAME}
-      restart: unless-stopped
-      ports:
-        - "80:80"
-      depends_on:
-        - backend
-      environment:
-        - REACT_APP_API_URL=https://panaurum.informatica.iesmontenaranco.com:8000
-        - VITE_API_URL=https://panaurum.informatica.iesmontenaranco.com:8000/api
-        - VITE_HOSTNAME=panaurum.informatica.iesmontenaranco.com
-      networks:
-        - app_network
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+        FRONTEND_REPO_URL: ${FRONTEND_REPO_URL}
+        API_URL: "https://panaurum.informatica.iesmontenaranco.com"
+    container_name: ${FRONTEND_CONTAINER_NAME}
+    restart: unless-stopped
+    expose:
+      - "80"  # Just expose, don't publish to host
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_API_URL=https://panaurum.informatica.iesmontenaranco.com
+      - VITE_API_URL=https://panaurum.informatica.iesmontenaranco.com/api
+      - VITE_HOSTNAME=panaurum.iesmontenaranco.com
+    networks:
+      - app_network
+      - nginx_network  # Add this network to connect with host nginx
 
   database:
     build:
@@ -50,8 +54,8 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    ports:
-      - "${DB_PORT}:3306"
+    expose:
+      - "3306"  # Just expose, don't publish to host
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -71,10 +75,15 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - JENKINS_OPTS=${JENKINS_OPTS}
+    networks:
+      - app_network
+      - nginx_network  # Add this network to connect with host nginx
 
 networks:
   app_network:
     driver: bridge
+  nginx_network:
+    external: true  # This should connect to your host's nginx network
 
 volumes:
   mysql_data:
