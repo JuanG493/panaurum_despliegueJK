@@ -11,12 +11,12 @@ services:
     env_file: .env
     environment:
       APP_URL: "https://panaurum.informatica.iesmontenaranco.com:8000"
-    expose:
-      - "8000"
     depends_on:
       - database
     networks:
       - app_network
+    ports:
+      - "8000:8000"
 
   frontend:
       build:
@@ -28,8 +28,8 @@ services:
           API_URL: "http://${DOMAIN_NAME}:8000"
       container_name: ${FRONTEND_CONTAINER_NAME}
       restart: unless-stopped
-      expose:
-        - "5173"
+      ports:
+        - "5173:5173"
       depends_on:
         - backend
       environment:
