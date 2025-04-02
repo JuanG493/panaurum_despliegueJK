@@ -25,8 +25,5 @@ RUN php artisan key:generate
 # Set permissions
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
 
-# Expose port
 EXPOSE 8000
-
-# Start Laravel server
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]

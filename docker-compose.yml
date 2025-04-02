@@ -17,9 +17,8 @@ services:
       - database
     networks:
       - app_network
-      - nginx_network  # Add this network to connect with host nginx
-    expose:
-      - "8000"  # Just expose, don't publish to host
+    ports:
+      - "8000:8000"  # Map host port 8000 to container port 8000
 
   frontend:
     build:
@@ -31,8 +30,8 @@ services:
         API_URL: "https://panaurum.informatica.iesmontenaranco.com"
     container_name: ${FRONTEND_CONTAINER_NAME}
     restart: unless-stopped
-    expose:
-      - "80"  # Just expose, don't publish to host
+    ports:
+      - "80:80"  # Map host port 80 to container port 80
     depends_on:
       - backend
     environment:
@@ -41,7 +40,6 @@ services:
       - VITE_HOSTNAME=panaurum.iesmontenaranco.com
     networks:
       - app_network
-      - nginx_network  # Add this network to connect with host nginx
 
   database:
     build:
