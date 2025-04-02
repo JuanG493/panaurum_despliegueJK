@@ -18,7 +18,9 @@ services:
     networks:
       - app_network
     ports:
-      - "8000:8000"  # Map host port 8000 to container port 8000
+      - "8000:8000"
+    volumes:
+      - ./backend/laravel.conf:/etc/apache2/sites-available/000-default.conf
 
   frontend:
     build:

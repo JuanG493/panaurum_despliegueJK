@@ -1,29 +1,35 @@
-FROM php:8.2-fpm
+FROM php:8.2-apache
 
-# Install required dependencies
-RUN apt-get update && apt-get install -y git unzip curl
+# Instalar extensiones necesarias
+RUN apt-get update && apt-get install -y \
+    unzip \
+    git \
+    curl \
+    libpq-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    && docker-php-ext-configure gd \
+    && docker-php-ext-install gd pdo pdo_mysql
+
+# Instalar Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Clone repository using HTTPS with token
 ARG GITHUB_TOKEN
 ARG BACKEND_REPO_URL
-RUN git clone --depth=1 https://${GITHUB_TOKEN}@github.com/${BACKEND_REPO_URL}.git /app
+RUN git clone --depth=1 https://${GITHUB_TOKEN}@github.com/${BACKEND_REPO_URL}.git /var/www/html
 
-WORKDIR /app
+# Configurar directorio de trabajo
+WORKDIR /var/www/html
 
-# Install composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Instalar dependencias de Laravel
+RUN composer install --no-dev --optimize-autoloader
 
-# Install dependencies
-RUN composer install --no-interaction
+# Establecer permisos adecuados
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Copy .env.example to .env if .env doesn't exist
-RUN if [ ! -f .env ]; then cp .env.example .env; fi
+# Habilitar mod_rewrite para Apache
+RUN a2enmod rewrite
 
-# Generate application key
-RUN php artisan key:generate
-
-# Set permissions
-RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
-
-EXPOSE 8000
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["apache2-foreground"]
