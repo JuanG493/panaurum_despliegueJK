@@ -1,0 +1,78 @@
+services:
+  nginx:
+    image: nginx:latest
+    container_name: ${NGINX_CONTAINER_NAME}
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "8000:8000"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+        BACKEND_REPO_URL: ${BACKEND_REPO_URL}
+    container_name: ${BACKEND_CONTAINER_NAME}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      APP_URL: "http://${DOMAIN_NAME}:8000"
+    expose:
+      - "8000"
+    depends_on:
+      - database
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+        FRONTEND_REPO_URL: ${FRONTEND_REPO_URL}
+        API_URL: "http://${DOMAIN_NAME}:8000"
+    container_name: ${FRONTEND_CONTAINER_NAME}
+    restart: unless-stopped
+    expose:
+      - "5173"
+    depends_on:
+      - backend
+
+  database:
+    image: mysql:8.0
+    container_name: ${DB_CONTAINER_NAME}
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "${DB_PORT}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: ${JENKINS_CONTAINER_NAME}
+    restart: unless-stopped
+    privileged: true
+    user: root
+    ports:
+      - "${JENKINS_PORT}:8080"
+      - "${JENKINS_AGENT_PORT}:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - JENKINS_OPTS=${JENKINS_OPTS}
+
+volumes:
+  db_data:
+  jenkins_home:

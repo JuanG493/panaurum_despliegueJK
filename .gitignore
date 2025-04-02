@@ -1,0 +1,40 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# TypeScript build artifacts
+dist/
+build/
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+logs/
+*.log
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# MySQL Database Data
+db_data/
+
+# Jenkins
+jenkins_home/
+
+# VS Code settings
+.vscode/
+
+# OS & System Files
+.DS_Store
+Thumbs.db
+
+# Git & IDE files
+.git/
+.idea/
+*.swp
+*.swo
