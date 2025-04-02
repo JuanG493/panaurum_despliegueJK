@@ -1,90 +1,37 @@
-version: '3'
+version: '3.8'
 
 services:
-  backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
-      args:
-        GITHUB_TOKEN: ${GITHUB_TOKEN}
-        BACKEND_REPO_URL: ${BACKEND_REPO_URL}
-    container_name: ${BACKEND_CONTAINER_NAME}
+  nginx:
+    image: nginx:latest
+    container_name: nginx_proxy
     restart: unless-stopped
-    env_file: .env
-    environment:
-      APP_URL: "https://panaurum.informatica.iesmontenaranco.com"
-    depends_on:
-      - database
-    networks:
-      - app_network
     ports:
+      - "80:80"
       - "8000:8000"
     volumes:
-      - ./backend/laravel.conf:/etc/apache2/sites-available/000-default.conf
-
-  frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
-      args:
-        GITHUB_TOKEN: ${GITHUB_TOKEN}
-        FRONTEND_REPO_URL: ${FRONTEND_REPO_URL}
-        API_URL: "https://panaurum.informatica.iesmontenaranco.com"
-    container_name: ${FRONTEND_CONTAINER_NAME}
-    restart: unless-stopped
-    ports:
-      - "80:80"  # Map host port 80 to container port 80
-    depends_on:
-      - backend
-    environment:
-      - REACT_APP_API_URL=https://panaurum.informatica.iesmontenaranco.com
-      - VITE_API_URL=https://panaurum.informatica.iesmontenaranco.com/api
-      - VITE_HOSTNAME=panaurum.iesmontenaranco.com
-    networks:
-      - app_network
-
-  database:
-    build:
-      context: .
-      dockerfile: database/Dockerfile
-    container_name: ${DB_CONTAINER_NAME}
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    expose:
-      - "3306"  # Just expose, don't publish to host
-    volumes:
-      - mysql_data:/var/lib/mysql
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
     networks:
       - app_network
 
   jenkins:
     image: jenkins/jenkins:lts
-    container_name: ${JENKINS_CONTAINER_NAME}
+    container_name: jenkins_server
     restart: unless-stopped
     privileged: true
     user: root
     ports:
-      - "${JENKINS_PORT}:8080"
-      - "${JENKINS_AGENT_PORT}:50000"
+      - "8080:8080"
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - JENKINS_OPTS=${JENKINS_OPTS}
     networks:
       - app_network
-      - nginx_network  # Add this network to connect with host nginx
 
 networks:
   app_network:
     driver: bridge
-  nginx_network:
-    external: true  # This should connect to your host's nginx network
 
 volumes:
-  mysql_data:
   jenkins_home:
+  certs:
