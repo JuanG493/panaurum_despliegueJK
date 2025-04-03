@@ -49,15 +49,12 @@ services:
 
   jenkins:
     image: jenkins/jenkins:lts
-    container_name: ${JENKINS_CONTAINER_NAME:-jenkins}
+    container_name: jenkins_server
     restart: unless-stopped
     privileged: true
     user: root
     ports:
-      - "${JENKINS_PORT:-8080}:8080"
-      - "${JENKINS_AGENT_PORT:-50000}:50000"
-    environment:
-      - JENKINS_OPTS=${JENKINS_OPTS}
+      - "8080:8080"
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
