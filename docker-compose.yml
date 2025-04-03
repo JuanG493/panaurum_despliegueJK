@@ -1,27 +1,66 @@
 version: '3.8'
 
 services:
-  nginx:
-    image: nginx:latest
-    container_name: nginx_proxy
+  frontend_app:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        - GITHUB_TOKEN=${GITHUB_TOKEN}
+        - FRONTEND_REPO_URL=${FRONTEND_REPO_URL}
+        - API_URL=https://${BACKEND_DOMAIN_NAME}
+    container_name: ${FRONTEND_CONTAINER_NAME:-frontend_app}
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "8000:8000"
+      - "${FRONTEND_PORT:-80}:80"
+    networks:
+      - app_network
+
+  backend_app:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        - GITHUB_TOKEN=${GITHUB_TOKEN}
+        - BACKEND_REPO_URL=${BACKEND_REPO_URL}
+    container_name: ${BACKEND_CONTAINER_NAME:-backend_app}
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8000}:80"
+    environment:
+      - DB_HOST=mysql_db
+      - DB_PORT=3306
+      - DB_DATABASE=${MYSQL_DATABASE}
+      - DB_USERNAME=${MYSQL_USER}
+      - DB_PASSWORD=${MYSQL_PASSWORD}
+    networks:
+      - app_network
+
+  mysql_db:
+    image: mysql:8.0
+    container_name: ${DB_CONTAINER_NAME:-mysql_db}
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./certs:/etc/nginx/certs:ro
+      - db_data:/var/lib/mysql
     networks:
       - app_network
 
   jenkins:
     image: jenkins/jenkins:lts
-    container_name: jenkins_server
+    container_name: ${JENKINS_CONTAINER_NAME:-jenkins}
     restart: unless-stopped
     privileged: true
     user: root
     ports:
-      - "8080:8080"
+      - "${JENKINS_PORT:-8080}:8080"
+      - "${JENKINS_AGENT_PORT:-50000}:50000"
+    environment:
+      - JENKINS_OPTS=${JENKINS_OPTS}
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
@@ -34,4 +73,4 @@ networks:
 
 volumes:
   jenkins_home:
-  certs:
+  db_data:
