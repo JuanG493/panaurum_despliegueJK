@@ -49,7 +49,9 @@ services:
       - app_network
 
   jenkins:
-    image: jenkins/jenkins:lts-jdk11-docker
+    build:
+      context: .
+      dockerfile: jenkins.Dockerfile
     container_name: jenkins_server
     restart: unless-stopped
     privileged: true
