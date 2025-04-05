@@ -32,6 +32,8 @@ services:
       - DB_PASSWORD=${MYSQL_PASSWORD}
     networks:
       - app_network
+    volumes:
+      - ./backend/laravel.conf:/etc/apache2/sites-available/000-default.conf
 
   mysql_db:
     image: mysql:8.0
