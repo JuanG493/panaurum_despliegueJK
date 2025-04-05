@@ -49,7 +49,7 @@ services:
       - app_network
 
   jenkins:
-    image: jenkins/jenkins:lts
+    image: jenkins/jenkins:lts-jdk11-docker
     container_name: jenkins_server
     restart: unless-stopped
     privileged: true
