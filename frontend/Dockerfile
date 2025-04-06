@@ -23,7 +23,8 @@ ARG FRONTEND_REPO_URL
 ARG API_URL
 
 # Clone repository
-RUN git clone --depth=1 https://${GITHUB_TOKEN}@github.com/${FRONTEND_REPO_URL}.git /app
+RUN git clone --depth=1 https://${GITHUB_TOKEN}@github.com/${FRONTEND_REPO_URL}.git /app || \
+    (cd /app && git fetch origin && git reset --hard origin/main)
 
 WORKDIR /app
 
