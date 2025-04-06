@@ -46,7 +46,7 @@ services:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
-      # - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
       # la linea anterior auto impirta el dump
     networks:
       - app_network
