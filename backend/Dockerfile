@@ -18,7 +18,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Clone repository using HTTPS with token
 ARG GITHUB_TOKEN
 ARG BACKEND_REPO_URL
-RUN git clone --depth=1 https://${GITHUB_TOKEN}@github.com/${BACKEND_REPO_URL}.git /var/www/html
+RUN git clone --depth=1 https://${GITHUB_TOKEN}@github.com/${BACKEND_REPO_URL}.git /var/www/html || \
+    (cd /var/www/html && git fetch origin && git reset --hard origin/main)
 
 # Configurar directorio de trabajo
 WORKDIR /var/www/html
